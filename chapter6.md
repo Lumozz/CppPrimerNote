@@ -298,3 +298,54 @@ c++中，最好使用传引用而不是传指针，因为指针需要在函数�
 
 ## 6.13
 
+```c++
+void f(T) //传值
+
+void f(&T) //传引用
+```
+
+## 6.14
+
+**Note** ：
+
+- 左值：C/C++语言中可以放在赋值符号左边的变量，即具有对应的可以由用户访问的[存储单元](https://baike.baidu.com/item/存储单元/8727749?fromModule=lemma_inlink)，并且能够由用户去改变其值的量。[左值](https://baike.baidu.com/item/左值/2327412?fromModule=lemma_inlink)表示存储在[计算机内存](https://baike.baidu.com/item/计算机内存/9021807?fromModule=lemma_inlink)的对象，而不是常量或计算的结果。或者说左值是代表一个内存地址值，并且通过这个内存地址，就可以对内存进行读并且写（主要是能写）操作；这也就是为什么左值可以被赋值的原因了。
+- [右值](https://baike.baidu.com/item/右值/6187364?fromModule=lemma_inlink)：当一个符号或者常量放在[操作符](https://baike.baidu.com/item/操作符/8978896?fromModule=lemma_inlink)右边的时候，计算机就读取他们的“右值”，也就是其代表的真实值。
+- 简单来说就是，左值相当于地址值，右值相当于数据值。右值指的是引用了一个存储在某个内存地址里的数据。 
+
+```c++
+#include <iostream>
+
+void swap(const int &a, const int &b){
+    int mid = a;
+    a = b; //错误，常量整形不能修改
+    b = mid;
+}
+
+int main() {
+    int a, b;
+    const int c=1;
+    const int d=2;
+    if(std::cin >> a >> b) {
+        swap(1, 2);
+        std::cout << a << b << std::endl;
+    }
+    return 0;
+}
+```
+
+## 6.15
+
+1. `s` 为`const string&` 类型，是为了避免拷贝，减少内存和时间消耗，且常量引用避免了意外改动；
+
+2. `occurs`为`string::size_type&`类型，是为了像函数外传递结果；
+
+3. `c`为普通传值，我们不能把const对象，字面值或需要类型转换的对象传递给普通的引用形参，但常量引用可以；
+
+4. 如果`s`是普通引用，也可能会意外改变原来字符串的内容；
+
+5. `occurs`如果是常量引用，那么意味着不能改变它的值；
+
+## 6.16
+
+
+
