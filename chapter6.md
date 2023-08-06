@@ -106,3 +106,21 @@ int main() {
 ```
 
 c++的for循环中，条件判断部分可以写表达式，并且表达式的结果对内存变量有影响。该例中，变量i先在条件判断中输出，然后在条件判断中自加1。两条表达式用逗号隔开。
+
+## 6.5
+
+```c++
+#include <iostream>
+
+int abs(int value){
+    return value > 0 ? value : -value;
+}
+
+int main()
+{
+    int value = 0;
+    std::cin >> value;
+    std::cout << abs(value) << std::endl;
+    return 0;
+}
+```
