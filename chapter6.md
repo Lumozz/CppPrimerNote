@@ -273,7 +273,7 @@ int main() {
 }
 ```
 
-# 6.12
+## 6.12
 
 ```c++
 #include <iostream>
@@ -712,7 +712,373 @@ int main(){
 }
 ```
 
+## 6.36 
+
+编写一个函数声明，使其返回数组的引用并且该数组包含10个`string`对象。 不用使用尾置返回类型、`decltype`或者类型别名。
+
+```c++ 
+std::string (&function(int)) [10] 
+```
+
+## 6.37
+
+为上一题的函数再写三个声明，一个使用类型别名，另一个使用尾置返回类型，最后一个使用`decltype`关键字。 你觉得哪种形式最好？为什么？
+
+```c++ 
+typedef std::string arrT[10];
+arrT& function(int);
+
+auto function(int) -> int (&)[10];
+
+std::string s[10]
+decltype(s) &function(int);
+    
+//个人还是觉得6.36的方法好，比较明了，且就一行代码，不花里胡哨。
+```
+
+## 6.38
+
+修改`arrPtr`函数，使其返回数组的引用。
+
+```c++
+decltype(odd)& arrPtr(int i)
+{
+    return (i % 2) ? odd : even;
+}
+```
+
+## 6.39
+
+说明在下面的每组声明中第二条语句是何含义。 如果有非法的声明，请指出来。
+
+```c++
+(a) int calc(int, int);
+	int calc(const int, const int);
+	//错误，顶层const不影响传入函数的对象，即顶层const可以被非const初始化，所以这两条声明是一样的。
+(b) int get();
+	double get();
+	//非法，重载只看参数列表，与返回值无关。
+(c) int *reset(int *);
+	double *reset(double *);
+	//合法
+```
+
+## 6.40
+
+下面的哪个声明是错误的？为什么？
+
+```c++
+(a) int ff(int a, int b = 0, int c = 0);
+//正确
+
+(b) char *init(int ht = 24, int wd, char bckgrnd);	
+//错误，第一个参数有默认实参，右侧两个参数也必须有默认实参。
+```
+
+## 6.41
+
+下面的哪个调用是非法的？为什么？哪个调用虽然合法但显然与程序员的初衷不符？为什么？
+
+```c++
+char *init(int ht, int wd = 80, char bckgrnd = ' ');
+
+(a) init();
+//非法，未提供第一个形参的实参；
+(b) init(24,10);
+//合法
+(c) init(14,'*');
+//合法，但第二个字符串实参被传到了整形 wd 形参中，与程序员的初衷不符。
+```
+
+## 6.42
+
+给`make_plural`函数的第二个形参赋予默认实参's', 利用新版本的函数输出单词success和failure的单数和复数形式。
+
+```c++
+#include <iostream>
+#include <string>
+
+std::string make_plural(size_t ctr, const std::string& word, const std::string& ending = "s")
+{
+    return (ctr > 1) ? word + ending : word;
+}
+
+int main()
+{
+    std::cout << "single: " << make_plural(1, "success", "es") << " "
+         << make_plural(1, "failure") << std::endl;
+    std::cout << "plural : " << make_plural(2, "success", "es") << " "
+         << make_plural(2, "failure") << std::endl;
+
+    return 0;
+}
+```
+
+## 6.43
+
+你会把下面的哪个声明和定义放在头文件中？哪个放在源文件中？为什么？
+
+```c++
+(a) inline bool eq(const BigInt&, const BigInt&) {...}
+(b) void putValues(int *arr, int size);
+```
+
+全部放在头文件中，a是内联函数，b是声明。
+
+## 6.44
+
+将6.2.2节的`isShorter`函数改写成内联函数。
+
+```c++
+#include <iostream>
+#include <string>
+
+inline bool isShorter(const std::string &s1, const std::string &s2){
+    return s1.size() < s2.size();
+}
+
+int main()
+{
+    std::cout << isShorter("123","1234") << std::endl;
+
+    return 0;
+}
+```
+
+## 6.45
+
+回顾在前面的练习中你编写的那些函数，它们应该是内联函数吗？ 如果是，将它们改写成内联函数；如果不是，说明原因。
+
+引用p124页的说法，内联机制用于优化规模较小，流程直接，频繁调用的函数，以空间换时间。
+
+## 6.46
+
+能把`isShorter`函数定义成`constexpr`函数吗？ 如果能，将它改写成`constxpre`函数；如果不能，说明原因。
+
+不能。`constexpr`函数的返回值类型及所有形参都得是字面值类型。
+
+```c++
+//这样写是合法的，只不过失去了意义。
+constexpr bool isShorter(const std::string &s1, const std::string &s2){
+//    return s1.size() < s2.size();
+    return true;
+}
+
+int main()
+{
+    std::cout << isShorter("123","1234") << std::endl;
+
+    return 0;
+}
+```
+
+## 6.47
+
+改写6.3.2节练习中使用递归输出`vector`内容的程序，使其有条件地输出与执行过程有关的信息。 例如，每次调用时输出`vector`对象的大小。 分别在打开和关闭调试器的情况下编译并执行这个程序。
+
+```c++
+#define NDEBUG 1 //有这个宏定义时，将会输出Vector size
+
+#include <vector>
+#include <iostream>
+
+void print_vector(std::vector<int> &v){
+#ifndef NDEBUG
+    std::cout << "vector size: " << v.size() << std::endl;
+#endif
+    if(v.size()==0){
+        return;
+    }
+    std::cout << v[0];
+    v.erase(v.begin());
+    print_vector(v);
+}
+
+int main(){
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    print_vector(v);
+
+    return 0;
+}
+```
+
+## 6.48
+
+说明下面这个循环的含义，它对assert的使用合理吗？
+
+```c++
+string s;
+while (cin >> s && s != sought) { } //空函数体
+```
+assert(cin);不合理。从这个程序的意图来看，应该用
+```c++
+assert(s == sought);
+```
 
 
 
+## 6.49
 
+什么是候选函数？什么事可行函数？
+
+- 候选函数：1）与被调用的函数同名；2）其声明在调用点可见
+- 可行函数：1）在候选函数中；2）形参与实参数量相同（默认参数除外）；3）每个实参的类型与对应的形参类型相同，或者可以转换成形参的类型
+
+## 6.50
+
+已知有第217页对函数`f`的声明，对于下面的每一个调用列出可行函数。 其中哪个函数是最佳匹配？ 如果调用不合法，是因为没有可匹配的函数还是因为调用具有二义性？
+
+```c++
+void f();
+void f(int);
+void f(int, int);
+void f(double, double = 3.14);
+```
+
+
+
+```c++
+(a) f(2.56, 42) //非法，二义性
+(b) f(42)		//合法，调用2
+(c) f(42, 0)	//合法，调用3
+(d) f(2.56, 3.14)//合法，调用4
+```
+
+## 6.51
+
+编写函数`f`的4版本，令其各输出一条可以区分的消息。 验证上一个练习的答案，如果你的回答错了，反复研究本节内容直到你弄清自己错在何处。
+
+```c++
+#include <vector>
+#include <iostream>
+
+void f();
+void f(int);
+void f(int, int);
+void f(double, double = 3.14);
+
+void f(){
+    std::cout << "this is f()" << std::endl;
+}
+
+void f(int){
+    std::cout << "this is f(int)" << std::endl;
+}
+
+void f(int, int){
+    std::cout << "this is f(int, int)" << std::endl;
+}
+
+void f(double, double){
+    std::cout << "this is f(double, double=3.14)" << std::endl;
+}
+
+int main(){
+    f();
+    f(12);
+    f(12, 13);
+    f(1.2, 1.3);
+
+    f(1.1);
+
+    return 0;
+}
+```
+
+```c++
+//输出：
+this is f()
+this is f(int)
+this is f(int, int)
+this is f(double, double=3.14)
+this is f(double, double=3.14)
+```
+
+## 6.52
+
+已知有如下声明：
+
+```c++
+void manip(int ,int);
+double dobj;
+```
+
+请指出下列调用中每个类型转换的等级。
+
+```c++
+(a) manip('a', 'z'); 	//第三级，类型提升实现的匹配。
+(b) manip(55.4, dobj);	//第四级，算数类型转换实现的匹配。
+```
+
+## 6.53
+
+说明下列每组声明中的第二条语句会产生什么影响，并指出哪些不合法（如果有的话）。
+
+```c++
+(a) int calc(int&, int&); 
+	int calc(const int&, const int&); //合法，底层const引用与非引用不冲突。
+(b) int calc(char*, char*);
+	int calc(const char*, const char*); //合法，底层const指针与非指针不冲突。
+(c) int calc(char*, char*);
+	int calc(char* const, char* const); //非法，重载不区分顶层const，两个声明其实是一个。
+```
+
+## 6.54
+
+编写函数的声明，令其接受两个`int`形参并返回类型也是`int`；然后声明一个`vector`对象，令其元素是指向该函数的指针。 
+
+```c++
+#include <vector>
+
+int func(int, int){
+    return 0;
+};
+
+int main(){
+
+    std::vector<int (*) (int, int)> v = {func};
+
+    return 0;
+}
+```
+
+## 6.55
+
+编写4个函数，分别对两个`int`值执行加、减、乘、除运算；在上一题创建的`vector`对象中保存指向这些函数的指针。
+
+```c++
+#include <vector>
+#include <iostream>
+
+int add(int i, int j){
+    return i+j;
+};
+
+int sub(int i, int j){
+    return i-j;
+};
+
+int mul(int i, int j){
+    return i*j;
+};
+
+int divd(int i, int j){
+    return i/j;
+};
+
+
+int main(){
+
+    std::vector<int (*) (int, int)> v = {add, sub, mul, divd};
+
+    for (int (*func) (int, int) : v){
+        std::cout << func(10, 5) << std::endl;
+    }
+	//输出15，5，50，2
+    return 0;
+}
+```
+
+## 6.56
+
+//输出15，5，50，2
