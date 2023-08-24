@@ -182,3 +182,421 @@ private:
 实际上，成员函数Foo()有一个隐式的形参this，它是自身对象的一个指针，但是不能显式地使用在Foo()的[形参列表](https://www.zhihu.com/search?q=形参列表&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A38388459})里。加上const就说明，this指向的对象是[const对象](https://www.zhihu.com/search?q=const对象&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A38388459})。
 
 当然，加上了const声明的成员函数，不能对调用它的对象内的成员进行修改（声明为mutable的成员例外）。
+
+## 7.6
+
+
+
+```c++
+#include <iostream>
+#include <string>
+
+class Sales_data{
+public:
+    std::string const& isbn() const {
+        return bookNo;
+    }
+    Sales_data& combine(const Sales_data&);
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+
+Sales_data& Sales_data::combine(const Sales_data& rhs) {
+    units_sold += units_sold;
+    revenue += rhs.revenue;
+    return *this;
+}
+
+std::istream& read(std::istream &is, Sales_data &item){
+    double price = 0;
+    is >> item.bookNo >> item.units_sold >> price;
+    item.revenue = price* item.units_sold;
+    return is;
+}
+
+std::ostream &print(std::ostream &os, const Sales_data &item){
+    os << item.isbn() << " " << item.units_sold << " " << item.revenue;
+    return os;
+}
+
+Sales_data add(const Sales_data &lhs, const Sales_data &rhs){
+    Sales_data sum = lhs;
+    sum.combine(rhs);
+    return sum;
+}
+
+int main(){
+    ;
+}
+```
+
+## 7.7
+
+使用这些新函数重写7.1.2节练习中的程序。
+
+```c++
+#include <iostream>
+#include <string>
+
+class Sales_data{
+public:
+    std::string const& isbn() const {
+        return bookNo;
+    }
+    Sales_data& combine(const Sales_data&);
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+
+Sales_data& Sales_data::combine(const Sales_data& rhs) {
+    units_sold += units_sold;
+    revenue += rhs.revenue;
+    return *this;
+}
+
+std::istream& read(std::istream &is, Sales_data &item){
+    double price = 0;
+    is >> item.bookNo >> item.units_sold >> price;
+    item.revenue = price* item.units_sold;
+    return is;
+}
+
+std::ostream &print(std::ostream &os, const Sales_data &item){
+    os << item.isbn() << " " << item.units_sold << " " << item.revenue;
+    return os;
+}
+
+Sales_data add(const Sales_data &lhs, const Sales_data &rhs){
+    Sales_data sum = lhs;
+    sum.combine(rhs);
+    return sum;
+}
+
+int main(){
+    Sales_data total;
+    if(read(std::cin, total)){
+        Sales_data trans;
+        while(read(std::cin, trans)){
+            if(total.isbn() == trans.isbn()) total.combine(trans);
+            else{
+                print(std::cout, total) << std::endl;
+                total = trans;
+            }
+        }
+        print(std::cout, total) << std::endl;
+    }
+    else
+    {
+        std::cerr << "No data?" << std::endl;
+        return -1;
+    }
+    return 0;
+}
+```
+
+## 7.8
+
+为什么`read`函数将其`Sales_data`参数定义成普通的引用，而`print`函数将其参数定义成常量引用？
+
+因为read函数中要改变Sales_data参数对应对象的值，而print不用。
+
+## 7.9
+
+对于7.1.2节练习中代码，添加读取和打印`Person`对象的操作。
+
+```c++
+#include <iostream>
+#include <string>
+
+class Person {
+public:
+    std::string name;
+    std::string address;
+
+};
+
+void read(std::istream& is, Person& p){
+    is >> p.name >> p.address; //这里没用返回值，如果向上一题那样使用istream& 作为返回值，可以判断读取是否成功
+}
+void print(std::ostream& os, const Person& p) {
+    os << p.name << " " << p.address;
+}
+
+int main(){
+    Person p;
+    read(std::cin, p);
+    print(std::cout, p);
+    return 0;
+}
+```
+
+## 7.10
+
+在下面这条`if`语句中，条件部分的作用是什么？
+
+```c++
+if (read(read(cin, data1), data2)) //等价read(std::cin, data1);read(std::cin, data2);
+```
+
+if可以判断读取是否成功
+
+## 7.11
+
+```c++
+#include <string>
+#include <iostream>
+
+struct Sales_data {
+    Sales_data() = default;
+    Sales_data(const std::string &s):bookNo(s) { }
+    Sales_data(const std::string &s, unsigned n, double p):bookNo(s), units_sold(n), revenue(n*p){ }
+    Sales_data(std::istream &is);
+
+    std::string isbn() const { return bookNo; };
+    Sales_data& combine(const Sales_data&);
+
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+
+// nonmember functions
+std::istream &read(std::istream &is, Sales_data &item)
+{
+    double price = 0;
+    is >> item.bookNo >> item.units_sold >> price;
+    item.revenue = price * item.units_sold;
+    return is;
+}
+
+std::ostream &print(std::ostream &os, const Sales_data &item)
+{
+    os << item.isbn() << " " << item.units_sold << " " << item.revenue;
+    return os;
+}
+
+Sales_data add(const Sales_data &lhs, const Sales_data &rhs)
+{
+    Sales_data sum = lhs;
+    sum.combine(rhs);
+    return sum;
+}
+
+// member functions.
+Sales_data::Sales_data(std::istream &is)
+{
+    read(is, *this);
+}
+
+Sales_data& Sales_data::combine(const Sales_data& rhs)
+{
+    units_sold += rhs.units_sold;
+    revenue += rhs.revenue;
+    return *this;
+}
+
+int main()
+{
+    Sales_data item1;
+    print(std::cout, item1) << std::endl;
+
+    Sales_data item2("0-201-78345-X");
+    print(std::cout, item2) << std::endl;
+
+    Sales_data item3("0-201-78345-X", 3, 20.00);
+    print(std::cout, item3) << std::endl;
+
+    Sales_data item4(std::cin);
+    print(std::cout, item4) << std::endl;
+
+    return 0;
+}
+```
+
+## 7.12
+
+```c++
+#include <string>
+#include <iostream>
+
+struct Sales_data {
+    Sales_data() = default;
+    Sales_data(const std::string &s):bookNo(s) { }
+    Sales_data(const std::string &s, unsigned n, double p):bookNo(s), units_sold(n), revenue(n*p){ }
+    Sales_data(std::istream &is);
+
+    std::string isbn() const { return bookNo; };
+    Sales_data& combine(const Sales_data&);
+
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+
+// nonmember functions
+std::istream &read(std::istream &is, Sales_data &item)
+{
+    double price = 0;
+    is >> item.bookNo >> item.units_sold >> price;
+    item.revenue = price * item.units_sold;
+    return is;
+}
+
+std::ostream &print(std::ostream &os, const Sales_data &item)
+{
+    os << item.isbn() << " " << item.units_sold << " " << item.revenue;
+    return os;
+}
+
+Sales_data add(const Sales_data &lhs, const Sales_data &rhs)
+{
+    Sales_data sum = lhs;
+    sum.combine(rhs);
+    return sum;
+}
+
+// member functions.
+Sales_data::Sales_data(std::istream &is)
+{
+    read(is, *this);
+}
+
+Sales_data& Sales_data::combine(const Sales_data& rhs)
+{
+    units_sold += rhs.units_sold;
+    revenue += rhs.revenue;
+    return *this;
+}
+
+int main()
+{
+    Sales_data item1;
+    print(std::cout, item1) << std::endl;
+
+    Sales_data item2("0-201-78345-X");
+    print(std::cout, item2) << std::endl;
+
+    Sales_data item3("0-201-78345-X", 3, 20.00);
+    print(std::cout, item3) << std::endl;
+
+    Sales_data item4(std::cin);
+    print(std::cout, item4) << std::endl;
+
+    return 0;
+}
+```
+
+## 7.13
+
+```c++
+int main()
+{
+    Sales_data total(std::cin);
+    if (!total.isbn().empty())
+    {
+        std::istream &is = std::cin;
+        while (is) {
+            Sales_data trans(is);
+            if (!is) break;
+            if (total.isbn() == trans.isbn())
+                total.combine(trans);
+            else {
+                print(std::cout, total) << std::endl;
+                total = trans;
+            }
+        }
+        print(std::cout, total) << std::endl;
+    }
+    else
+    {
+        std::cerr << "No data?!" << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+```
+
+## 7.14
+
+编写一个构造函数，令其用我们提供的类内初始值显式地初始化成员。
+
+```c++
+Sales_data() : units_sold(0) , revenue(0) { }
+```
+
+## 7.15
+
+```c++
+class Person {
+public:
+    std::string name;
+    std::string address;
+    Person() = default;
+    Person(const std::string& sname, const std::string& saddress):name(name), address(address){}
+    Person(std::istream& is){read(is, *this);}
+    std::istream &read(std::istream&, Person&);
+};
+```
+
+## 7.16
+
+在类的定义中对于访问说明符出现的位置和次数有限定吗？ 如果有，是什么？什么样的成员应该定义在`public`说明符之后？ 什么样的成员应该定义在`private`说明符之后？
+
+解：
+
+**
+
+在类的定义中对于访问说明符出现的位置和次数**没有限定**。
+
+每个访问说明符指定了接下来的成员的访问级别，其有效范围直到出现下一个访问说明符或者达到类的结尾处为止。
+
+如果某个成员能够在整个程序内都被访问，那么它应该定义为`public`; 如果某个成员只能在类内部访问，那么它应该定义为`private`。
+
+**
+
+## 7.17
+
+使用`class`和`struct`时有区别吗？如果有，是什么？
+
+解：
+
+`class`和`struct`的唯一区别是默认的访问级别不同。
+
+## 7.18
+
+封装是何含义？它有什么用处？
+
+封装将类内部分成员设置为类外不可见，而提供部分接口给外面，这样的行为叫封装
+
+封装的作用：
+
+- 确保用户的代码不会无意见破坏被封装对象的状态
+- 被封装的对象可以随时改变，而不需要调整用户端代码
+
+## 7.19
+
+在你的`Person`类中，你将把哪些成员声明成`public`的？ 哪些声明成`private`的？ 解释你这样做的原因。
+
+构造函数、`getName()`、`getAddress()`函数将设为`public`。 `name`和 `address` 将设为`private`。 函数是暴露给外部的接口，因此要设为`public`； 而数据则应该隐藏让外部不可见。
+
+## 7.20
+
+友元在什么时候有用？请分别举出使用友元的利弊。
+
+解：
+
+当其他类或者函数想要访问当前类的私有变量时，这个时候应该用友元。
+
+利：
+
+与当前类有关的接口函数能直接访问类的私有变量。
+
+弊：
+
+牺牲了封装性与可维护性。
+
+## 7.21
+
