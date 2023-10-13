@@ -260,3 +260,254 @@ std::ostream& print(std::ostream &os, const Sales_data &item) {
 }
 #endif //CHAPTER6_CHAPTER8_H
 ```
+
+## 8.7
+
+修改上一节的书店程序，将结果保存到一个文件中。将输出文件名作为第二个参数传递给`main`函数。
+
+把上一题的std::cout变为ofstream流就可以了
+
+```c++
+#include <iostream>
+#include <fstream>
+#include "main.h"
+
+int main(int argc, char **argv){
+    std::ifstream input(argv[1]);
+    std::ofstream output(argv[2]);
+
+    Sales_data total;
+
+    if (read(input, total)){
+        Sales_data trans;
+        while(read(input, trans)){
+            if (total.isbn() == trans.isbn())
+                total.combine(trans);
+            else{
+                print(output, total) << std::endl;
+                total = trans;
+            }
+        }
+        print(output, total) << std::endl;
+    }
+    else {
+        std::cerr << "No data" << std::endl;
+    }
+}
+```
+
+## 8.8
+
+修改上一题的程序，将结果追加到给定的文件末尾。对同一个输出文件，运行程序至少两次，检验数据是否得以保留。
+
+在定义流时，显式指定`std::ofstream output(argv[2], std::ofstream::app);`
+
+```c++
+#include <iostream>
+#include <fstream>
+#include "main.h"
+
+int main(int argc, char **argv){
+    std::ifstream input(argv[1]);
+    std::ofstream output(argv[2], std::ofstream::app);
+
+    Sales_data total;
+
+    if (read(input, total)){
+        Sales_data trans;
+        while(read(input, trans)){
+            if (total.isbn() == trans.isbn())
+                total.combine(trans);
+            else{
+                print(output, total) << std::endl;
+                total = trans;
+            }
+        }
+        print(output, total) << std::endl;
+    }
+    else {
+        std::cerr << "No data" << std::endl;
+    }
+}
+```
+
+## 8.9
+
+使用你为8.1.2节第一个练习所编写的函数打印一个`istringstream`对象的内容。
+
+```c++
+#include<iostream>
+#include<sstream>
+
+std::istream& func(std::istream &is)
+{
+    std::string buf;
+    while(is >> buf){
+        std::cout << buf << std::endl;
+    }
+
+    return is;
+}
+
+int main(){
+    std::istringstream iss("how are you");
+    std::istream& is = func(iss);
+    std::cout << is.rdstate() << std::endl;
+}
+```
+
+## 8.10
+
+编写程序，将来自一个文件中的行保存在一个`vector`中。然后使用一个`istringstream`从`vector`读取数据元素，每次读取一个单词。
+
+```c++
+#include<iostream>
+#include<fstream>
+#include<sstream>
+#include<vector>
+
+int main(int argc, char **argv){
+    std::ifstream ifile(argv[1]);
+    std::string line;
+    std::vector<std::string> lines;
+
+    while(std::getline(ifile, line)){
+        lines.push_back(line);
+    }
+
+    for(std::string l : lines){
+        std::istringstream iss(l);
+        std::string s;
+        while(iss >> s){
+            std::cout << s << std::endl;
+        }
+    }
+}
+```
+
+## 8.11
+
+本节的程序在外层`while`循环中定义了`istringstream`对象。如果`record`对象定义在循环之外，你需要对程序进行怎样的修改？重写程序，将`record`的定义移到`while`循环之外，验证你设想的修改方法是否正确。
+
+对于已经声明的流变量，对文件的读写用`open()`绑定，内存string读写用`str()` 绑定
+
+```c++
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+struct PersonInfo {
+    std::string name;
+    std::vector<std::string> phones;
+};
+
+int main()
+{
+    std::string line, word;
+    std::vector<PersonInfo> people;
+    std::istringstream record;
+    while (getline(std::cin, line))
+    {
+        PersonInfo info;
+        record.clear();
+        record.str(line);
+        record >> info.name;
+        while (record >> word)
+            info.phones.push_back(word);
+        people.push_back(info);
+    }
+
+    for (auto &p : people)
+    {
+        std::cout << p.name << " ";
+        for (auto &s : p.phones)
+            std::cout << s << " ";
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
+```
+
+## 8.12
+
+我们为什么没有在`PersonInfo`中使用类内初始化？
+
+不符合设计设计预期
+
+## 8.13
+
+重写本节的电话号码程序，从一个命名文件而非`cin`读取数据。
+
+```c++
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <vector>
+
+using std::vector; using std::string; using std::cin; using std::istringstream;
+using std::ostringstream; using std::ifstream; using std::cerr; using std::cout; using std::endl;
+using std::isdigit;
+
+struct PersonInfo {
+    string name;
+    vector<string> phones;
+};
+
+bool valid(const string& str)
+{
+    return isdigit(str[0]);
+}
+
+string format(const string& str)
+{
+    return str.substr(0,3) + "-" + str.substr(3,3) + "-" + str.substr(6);
+}
+
+int main()
+{
+    ifstream ifs("../data/phonenumbers.txt");
+    if (!ifs)
+    {
+        cerr << "no phone numbers?" << endl;
+        return -1;
+    }
+
+    string line, word;
+    vector<PersonInfo> people;
+    istringstream record;
+    while (getline(ifs, line))
+    {
+        PersonInfo info;
+        record.clear();
+        record.str(line);
+        record >> info.name;
+        while (record >> word)
+            info.phones.push_back(word);
+        people.push_back(info);
+    }
+
+    for (const auto &entry : people)
+    {
+        ostringstream formatted, badNums;
+        for (const auto &nums : entry.phones)
+            if (!valid(nums)) badNums << " " << nums;
+            else formatted << " " << format(nums);
+        if (badNums.str().empty())
+            cout << entry.name << " " << formatted.str() << endl;
+        else
+            cerr << "input error: " << entry.name
+                 << " invalid number(s) " << badNums.str() << endl;
+    }
+
+    return 0;
+}
+```
+
+## 8.14
+
+我们为什么将`entry`和`nums`定义为`const auto&`？
+
+它们都是类类型，因此使用引用避免拷贝。 在循环当中不会改变它们的值，因此用`const`。
