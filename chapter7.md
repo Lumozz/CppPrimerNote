@@ -706,3 +706,85 @@ std::ostream &print(std::ostream &os, const Person &person)
     return os;
 }
 ```
+
+## 7.23
+
+编写你自己的`Screen`类型。
+
+```c++
+#include <string>
+
+class Screen {
+    public:
+        using pos = std::string::size_type;
+
+        Screen() = default;
+        Screen(pos ht, pos wd, char c):height(ht), width(wd), contents(ht*wd, c){ }
+
+        char get() const { return contents[cursor]; }
+        char get(pos r, pos c) const { return contents[r*width+c]; }
+
+    private:
+        pos cursor = 0;
+        pos height = 0, width = 0;
+        std::string contents;
+};
+```
+
+## 7.24
+
+给你的`Screen`类添加三个构造函数：一个默认构造函数；另一个构造函数接受宽和高的值，然后将`contents`初始化成给定数量的空白；第三个构造函数接受宽和高的值以及一个字符，该字符作为初始化后屏幕的内容。
+
+```c++
+#include <string>
+
+class Screen {
+public:
+    typedef std::string::size_type pos;
+
+    Screen() = default;
+    Screen(pos ht, pos wd, pos ):height(ht), width(wd), contents(ht*wd, ' '){ }
+    Screen(pos ht, pos wd, char c):height(ht), width(wd), contents(ht*wd, c){ }
+
+    char get() const { return contents[cursor]; }
+    char get(pos r, pos c) const { return contents[r*width+c]; }
+
+private:
+    pos cursor = 0;
+    pos height = 0, width = 0;
+    std::string contents;
+};
+```
+
+## 7.25
+
+`Screen`能安全地依赖于拷贝和赋值操作的默认版本吗？ 如果能，为什么？如果不能？为什么？
+
+可以
+
+`Screen`的成员只有内置类型和`string`，因此能安全地依赖于拷贝和赋值操作的默认版本。
+
+## 7.26
+
+将`Sales_data::avg_price`定义成内联函数。
+
+在定义处加上inline:
+
+```c++
+inline double Sales_data::avg_price() const
+{
+    return units_sold ? revenue/units_sold : 0;
+}
+```
+
+## 7.27
+
+给你自己的`Screen`类添加`move`、`set` 和`display`函数，通过执行下面的代码检验你的类是否正确。
+
+```c++
+Screen myScreen(5, 5, 'X');
+myScreen.move(4, 0).set('#').display(cout);
+cout << "\n";
+myScreen.display(cout);
+cout << "\n";
+```

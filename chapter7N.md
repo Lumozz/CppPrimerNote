@@ -15,6 +15,16 @@
 
   综上所属，这两个词可以互换使用，但**对象常用作名词**， **实例常用作动词**。此外，c++书籍中常用对象一词，而Python书籍中常用实例一词，可能只是习惯问题。
 
+- 书中两个类
+
+  - 对`Sales_data`类的描述
+
+    书中描述了使用Sales_data类的一种方式：读取用户输入的书籍销售数据，如果这条销售数据和上一条都是同一本书的（ISBN号相同），则将两条数据融合，否则就把上一本书的数据打印出来。
+
+  - 对`Screen`类的描述
+
+    书中写了一个名为`Screen`的类作为例子。这个类用两个数代表屏幕的长和宽，用一个字符串表示二维屏幕中的所有字符，长度等于屏幕长宽的积。由于构造函数只能传入一个`char`字符，所以一开始屏幕中所有位置的字符都是一样的。
+
 
 ## 类的基本概念：
 
@@ -34,10 +44,6 @@
   数据抽象是一个概念，他描述了隐藏内部细节并只暴露出有限接口的做法。
 
   封装是实现数据抽象的一种技术，它通过隐藏对象的内部状态和细节，强制使用对象提供的方法来实现数据抽象。
-
-- 对`Sales_data`类的使用
-
-  书中描述了使用Sales_data类的一种方式：读取用户输入的书籍销售数据，如果这条销售数据和上一条都是同一本书的（isbn号相同），则将两条数据融合，否则就把上一本书的数据打印出来。
 
 - **`const`对象和`const`数据成员**
 
@@ -66,18 +72,72 @@
   ```
   
   对于一个**非常量对象**，可以修改其中非常量的数据成员，但是不能修改常量数据成员；而对于**常量**对象，其中的常量和非常量数据成员均不可被修改。
+  
+  - 可变数据成员
+  
+    可以用`mutable`声明一个可变数据成员，一个`const`成员函数可以改变一个`const`对象的可变成员的值。
+  
+    ```c++
+    #include <iostream>
+    
+    class MyClass {
+    private:
+        mutable int myValue; // 声明可变成员
+    
+    public:
+        MyClass(int value) : myValue(value) {}
+    
+        void setValue(int value) const {
+            myValue = value; // 在 const 成员函数中修改 mutable 成员的值
+        }
+    
+        int getValue() const {
+            return myValue;
+        }
+    };
+    
+    int main(){
+        const MyClass c(1);
+        std::cout << c.getValue() << std::endl;
+        c.setValue(2); //即便是在const对象中，可变数据成员的值依然是可被修改的。
+        std::cout << c.getValue() << std::endl;
+    }
+    ```
 
-## 成员函数
+## 成员函数与数据成员
 
-- 声明与定义：
+- 类内数据成员初始值
 
-  成员函数的声明必须在类的内部，而它的定义既可以在类的内部也可以在类的外部。
+  类内初始值必须使用=的初始化形式，或花括号括起来的直接初始化形式。
 
-  在类外定义时，返回类型，参数列表，函数名，是否`const`都需要与声明一致。
+  类内初始值必须使用 `=` 或 `{}` 的形式，而不能使用括号 `()` 的形式进行初始化，这主要是为了避免编译器可能会将这种初始化语法误解为函数声明，从而导致错误或者不可预期的行为(Most vexing parse)。
 
-  成员函数可以随意使用类中的其他成员而无须在意成员的出现次序。因为编译器首先编译成员声明，然后才是函数体。
+  ```c++
+  class Widget 
+  {
+  private: 
+    typedef int x;
+    int z(x); // 这是个函数还是初始化定义？
+  };
+  ```
 
-- 调用：
+- 成员函数声明与定义：
+
+  - 成员函数的声明必须在类的内部，而它的定义既可以在类的内部也可以在类的外部。
+
+    定义在类外时，返回类型，参数列表，函数名，是否`const`都需要与声明一致。必要时可以声明inline。
+
+  - `inline`内联
+
+    定义在类内时，类内部的成员函数是自动inline的。
+
+    `inline` 关键字可以在函数的**声明或定义**处使用，但通常**建议在函数定义处使用**。因为`inline`是向编译器提出的一个建议，希望它将函数调用替换为函数体本身，以减少函数调用的开销。这需要编译器看到整个函数体才能做出决定。
+
+  - 成员函数可以随意使用类中的其他成员而无须在意成员的出现次序。因为编译器首先编译成员声明，然后才是函数体。
+
+  - 成员函数可以被重载。
+
+- 成员函数调用：
 
   调用成员函数时，实际上是替某个实例对象调用它。
 
@@ -271,6 +331,35 @@
     }
     ```
   
+  **注意**：
+  
+  `MyClass c()` 和 `MyClass c` 在 C++ 中有非常重要的区别。
+  
+  这要提到"最令人困惑的解析"（Most Vexing Parse）。这是 C++ 语言中的一种语法解析现象，它源于 C++ 的语法规则中的一条：如果一段代码可以被解析为声明，那么它就应该被解析为声明。
+  
+  这种现象最常见的形式就是试图用默认构造函数初始化一个对象，但编译器却将其解析为函数声明。例如：
+  
+  ```c++
+  class MyClass {};
+  
+  // 意图是创建一个 MyClass 对象
+  MyClass obj();
+  
+  // 但是编译器将其解析为一个函数声明。
+  // 函数名为 obj，没有参数，返回一个 MyClass 对象。
+  ```
+  
+  上述代码中的 `MyClass obj();` 是最令人困惑的解析的一个例子。开发者可能意图是创建一个 `MyClass` 类型的对象 `obj`，并使用默认构造函数进行初始化。但是，由于 C++ 的语法规则，编译器实际上将其解析为一个函数声明，函数名为 `obj`，没有参数，返回一个 `MyClass` 类型的对象。
+  
+  为了避免这种混淆，我们可以使用不同的语法来创建并初始化对象，例如：
+  
+  ```c++
+  MyClass obj;      // 创建一个 MyClass 对象
+  MyClass obj{};    // 使用花括号创建一个 MyClass 对象
+  MyClass obj = MyClass(); // 使用赋值语法创建一个 MyClass 对象
+  ```
+  
+  这些语法都会创建一个 `MyClass` 类型的对象 `obj`，并使用默认构造函数进行初始化，而不会引发最令人困惑的解析问题。
 
 - 构造函数初始化数据成员的方式
   - 构造函数的函数体内赋值初始化
@@ -304,7 +393,74 @@
 
   可以声明类、类成员函数或全局函数为友元，让它们能够访问另一个类的私有或保护成员
 
+  1. 声明类为友元
+
+  ```c++
+  class FriendClass; // 前向声明
   
+  class MyClass {
+  private:
+      int myValue;
+  
+  public:
+      MyClass(int value) : myValue(value) {}
+  
+      friend class FriendClass; // 声明 FriendClass 为友元
+  };
+  
+  class FriendClass {
+  public:
+      void accessMyClass(const MyClass& obj) {
+          std::cout << "Accessing MyClass private member: " << obj.myValue << std::endl;
+      }
+  };
+  ```
+
+  `FriendClass` 是前向声明，因为在 `MyClass` 的定义中，编译器需要知道 `FriendClass` 是一个类的名字。
+
+  2. 声明类的成员函数为友元
+
+  ```c++
+  class OtherClass {
+  public:
+      void accessMyClass(const MyClass& obj);
+  };
+  
+  class MyClass {
+  private:
+      int myValue;
+  
+  public:
+      MyClass(int value) : myValue(value) {}
+  
+      // 声明 OtherClass 的成员函数 accessMyClass 为友元
+      friend void OtherClass::accessMyClass(const MyClass& obj);
+  };
+  
+  void OtherClass::accessMyClass(const MyClass& obj) {
+      std::cout << "Accessing MyClass private member: " << obj.myValue << std::endl;
+  }
+  ```
+
+  3. 声明函数为友元
+
+  ```c++
+  class MyClass {
+  private:
+      int myValue;
+  
+  public:
+      MyClass(int value) : myValue(value) {}
+  
+      friend void accessMyClass(const MyClass& obj); // 声明函数为友元
+  };
+  
+  void accessMyClass(const MyClass& obj) {
+      std::cout << "Accessing MyClass private member: " << obj.myValue << std::endl;
+  }
+  ```
+
+  在这个例子中，函数 `accessMyClass` 是 `MyClass` 的友元，所以 `accessMyClass` 可以访问 `MyClass` 的私有成员 `myValue`。
 
   
 
