@@ -231,3 +231,79 @@ if (i == 1024)
 
 ## 4.21
 
+编写一段程序，使用条件运算符从`vector`中找到哪些元素的值是奇数，然后将这些奇数值翻倍。
+
+```c++
+#include <iostream>
+#include <vector>
+
+using std::cout;
+using std::endl;
+using std::vector;
+
+int main()
+{
+	vector<int> ivec{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+	for (auto &i : ivec)
+	{
+		cout << ((i & 0x1) ? i * 2 : i) << " ";
+	}
+	cout << endl;
+
+	return 0;
+}
+```
+
+## 4.22
+
+本节的示例程序将成绩划分为`high pass`、`pass` 和 `fail` 三种，扩展该程序使其进一步将 60 分到 75 分之间的成绩设定为`low pass`。要求程序包含两个版本：一个版本只使用条件运算符；另一个版本使用1个或多个`if`语句。哪个版本的程序更容易理解呢？为什么？
+
+```c++
+#include <iostream>
+using std::cout; using std::cin; using std::endl;
+
+int main()
+{
+	for (unsigned g; cin >> g;)
+	{
+		auto result = g > 90 ? "high pass" : g < 60 ? "fail" : g < 75 ? "low pass" : "pass";
+		cout << result << endl;
+
+		// -------------------------
+		if (g > 90)         cout << "high pass";
+		else if (g < 60)    cout << "fail";
+		else if (g < 75)    cout << "low pass";
+		else                cout << "pass";
+		cout << endl;
+	}
+
+	return 0;
+}
+```
+
+## 4.23
+
+因为运算符的优先级问题，下面这条表达式无法通过编译。根据4.12节中的表指出它的问题在哪里？应该如何修改？
+
+```c++
+string s = "word";
+string pl = s + s[s.size() - 1] == 's' ? "" : "s" ;
+```
+
+加法运算符的优先级高于条件运算符。因此要改为：
+
+```c++
+string pl = s + (s[s.size() - 1] == 's' ? "" : "s") ;
+```
+
+## 4.24
+
+本节的示例程序将成绩划分为`high pass`、`pass`、和`fail`三种，它的依据是条件运算符满足右结合律。假如条件运算符满足的是左结合律，求值的过程将是怎样的？
+
+如果条件运算符满足的是左结合律。那么
+
+`finalgrade = (grade > 90) ? "high pass" : (grade < 60) ? "fail" : "pass";` 等同于 `finalgrade = ((grade > 90) ? "high pass" : (grade < 60)) ? "fail" : "pass";` 假如此时 `grade > 90` ，第一个条件表达式的结果是 `"high pass"` ，而字符串字面值的类型是 `const char *`，非空所以为真。因此第二个条件表达式的结果是 `"fail"`。这样就出现了自相矛盾的逻辑。
+
+## 4.25
+
