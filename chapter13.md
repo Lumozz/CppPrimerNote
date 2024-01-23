@@ -73,3 +73,151 @@ private:
 	int i;
 }
 ```
+
+
+
+```c++
+#include<string>
+#include<iostream>
+
+class HasPtr {
+public:
+    HasPtr(const std::string& s = std::string()):
+            ps(new std::string(s)), i(0) { };
+    HasPtr(const HasPtr& has_ptr):
+            ps(new std::string(*has_ptr.ps)){};
+
+    std::string GetStr(){
+        return ps == nullptr ? "" : *ps;
+    }
+
+    void del(){
+        delete ps;
+        ps = nullptr;
+    }
+private:
+    std::string *ps;
+    int i;
+};
+
+int main(){
+    HasPtr h1("12345");
+    HasPtr h2(h1);
+
+    std::cout << "h1: " << h1.GetStr() << std::endl;
+    std::cout << "h2: " << h2.GetStr() << std::endl;
+
+    h1.del();
+
+    if(!h1.GetStr().empty()){
+        std::cout << "h1: " << h1.GetStr() << std::endl;
+    } else {
+        std::cout << "h1: " << "h1 ps empty" << std::endl;
+    }
+
+    if(!h2.GetStr().empty()){
+        std::cout <<"h2: " << h2.GetStr() << std::endl;
+    } else {
+        std::cout <<"h2: "  << "h2 ps empty" << std::endl;
+    }
+}
+```
+
+```sh
+# output
+h1: 12345
+h2: 12345
+h1: h1 ps empty
+h2: 12345
+```
+
+
+
+## 13.6
+
+拷贝赋值运算符是什么？什么时候使用它？合成拷贝赋值运算符完成什么工作？什么时候会生成合成拷贝赋值运算符？
+
+拷贝赋值运算符：用于定义，一个对象如何通过赋值`=`操作符，从一个同类型对象那里获得数据。当把一个对象赋值给一个已经存在的同类型对象时，会调用拷贝赋值运算符。合成拷贝运算符会将右侧运算对象的每个非`static`成员赋予左侧运算对象的对应成员。如果一个类未定义自己的拷贝赋值运算符，编译器会生成一个合成拷贝赋值运算符。
+
+## 13.7
+
+当我们将一个`StrBlob`赋值给另一个`StrBlob`，会发生什么？赋值`StrBlobPtr`呢？
+
+- `StrBlob`
+	- 赋值操作通常会调用拷贝赋值运算符，如果没有用户自定义的拷贝赋值运算符，将会调用编译器合成的拷贝赋值运算符。
+	- 合成的拷贝赋值运算符会逐个复制非静态成员，对于`std::shared_ptr`成员，它会增加左侧对象(赋值后的对象)所持有的`std::vector`的引用计数。
+	- 由于`StrBlob`内部的`std::shared_ptr`是共享所有权的智能指针，赋值后两个`StrBlob`对象将共享对同一`std::vector`的所有权。如果一个`StrBlob`对象对`std::vector`做出了修改，这些修改对另一个`StrBlob`对象也是可见的。
+	- 当最后一个拥有共享所有权的`StrBlob`对象被销毁时，`std::vector`将会被自动删除。
+- `StrBlobPtr`
+	- 同样，赋值操作会调用拷贝赋值运算符，如果没有用户自定义的，则调用编译器合成的。
+	- 拷贝赋值运算符会复制`StrBlobPtr`的所有非静态成员，包括`std::weak_ptr`和当前索引`curr`。
+	- `std::weak_ptr`的赋值不会改变`std::vector`的引用计数。它只是简单地复制了一个指针，指向同一个`vector`，不影响`vector`的生命周期。
+	- 赋值后，两个`StrBlobPtr`对象指向同一个`StrBlob`内部的`vector`
+
+
+
+## 13.8
+
+```c++
+#include<string>
+#include<iostream>
+
+class HasPtr {
+public:
+    HasPtr(const std::string& s = std::string()):
+            ps(new std::string(s)), i(0) { };
+    HasPtr(const HasPtr& has_ptr):
+            ps(new std::string(*has_ptr.ps)){};
+
+    HasPtr& operator=(const HasPtr& has_ptr){
+        ps = new std::string(*has_ptr.ps);
+        *ps += "6";
+        return *this;
+    };
+
+    std::string GetStr(){
+        return ps == nullptr ? "" : *ps;
+    }
+
+    void del(){
+        delete ps;
+        ps = nullptr;
+    }
+private:
+    std::string *ps;
+    int i;
+};
+
+int main(){
+    HasPtr h1("12345");
+    HasPtr h2;
+    h2 = h1;
+
+    std::cout << "h1: " << h1.GetStr() << std::endl;
+    std::cout << "h2: " << h2.GetStr() << std::endl;
+
+    h1.del();
+
+    if(!h1.GetStr().empty()){
+        std::cout << "h1: " << h1.GetStr() << std::endl;
+    } else {
+        std::cout << "h1: " << "h1 ps empty" << std::endl;
+    }
+
+    if(!h2.GetStr().empty()){
+        std::cout <<"h2: " << h2.GetStr() << std::endl;
+    } else {
+        std::cout <<"h2: "  << "h2 ps empty" << std::endl;
+    }
+}
+```
+
+```sh
+h1: 12345
+h2: 123456
+h1: h1 ps empty
+h2: 123456
+```
+
+## 13.9
+
